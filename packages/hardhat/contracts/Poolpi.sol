@@ -12,21 +12,23 @@ contract Poolpi {
   uint256 internal constant RAY = 1e27;
 
   // config
-  uint immutable START_DATE; // date after which borrowing can start
-  uint immutable EXPIRATION_DATE; // no repay possible after this date
-  uint immutable DEATH_DATE; // suppliers can withdraw their funds after this date
-  uint immutable BORROW_SPR; // interest rate per second for borrowers, in ray
-  IERC20 immutable USDC;
-  mapping(IERC721 => uint) assetPrice;
+  uint immutable public START_DATE; // date after which borrowing can start
+  uint immutable public EXPIRATION_DATE; // no repay possible after this date
+  uint immutable public DEATH_DATE; // suppliers can withdraw their funds after this date
+  uint immutable public BORROW_SPR; // interest rate per second for borrowers, in ray
+  IERC20 immutable private USDC;
+  mapping(IERC721 => uint) public assetPrice;
 
   struct Loan {
     IERC721 collection;
     uint tokenId;
     uint loanDate;
+    uint amount;
     address borrowedBy;
   }
 
   uint totalSupplied;
+  uint totalBorrowed;
   uint totalRepaid;
   uint nbOfLoans;
   mapping(address => uint) suppliedBy;
@@ -54,7 +56,7 @@ contract Poolpi {
     IERC721[] memory collections,
     uint[] memory _assetPrices
   ) {
-    require(startDate < expirationDate && expirationDate < deathDate);
+    require(block.timestamp < startDate && startDate < expirationDate && expirationDate < deathDate);
 
     START_DATE = startDate;
     EXPIRATION_DATE = expirationDate;
@@ -85,14 +87,16 @@ contract Poolpi {
     if (block.timestamp < START_DATE || block.timestamp >= EXPIRATION_DATE) revert BorrowsAndRepaysAreClosed();
 
     IERC721(collection).transferFrom(msg.sender, address(this), tokenId);
+    uint amount = assetPrice[collection] - calculateInterests(assetPrice[collection], EXPIRATION_DATE - block.timestamp);
     loan[nbOfLoans] = Loan({
       collection: collection,
       tokenId: tokenId,
       loanDate: block.timestamp,
+      amount: amount,
       borrowedBy: msg.sender
     });
-    uint amount = 2 * assetPrice[collection] - calculateInterests(assetPrice[collection], EXPIRATION_DATE - block.timestamp);
     USDC.transfer(msg.sender, amount);
+    totalBorrowed += amount;
 
     emit Borrowed(msg.sender, nbOfLoans, amount);
     nbOfLoans++;
@@ -103,7 +107,7 @@ contract Poolpi {
     if (loan[loanId].borrowedBy != msg.sender) revert SenderIsNotTheBorrower(msg.sender);
     if (block.timestamp >= EXPIRATION_DATE) revert BorrowsAndRepaysAreClosed();
 
-    uint repaid = assetPrice[loan[loanId].collection] + calculateInterests(assetPrice[loan[loanId].collection], block.timestamp - loan[loanId].loanDate);
+    uint repaid = loan[loanId].amount + calculateInterests(loan[loanId].amount, block.timestamp - loan[loanId].loanDate);
     USDC.transferFrom(msg.sender, address(this), repaid);
     IERC721(loan[loanId].collection).transferFrom(address(this), msg.sender, loan[loanId].tokenId);
     totalRepaid += repaid;
@@ -133,7 +137,7 @@ contract Poolpi {
   function withdraw() public {
     if (block.timestamp < DEATH_DATE) revert LiquidityNotYetUnlocked();
 
-    uint amount = totalRepaid * (totalSupplied * RAY / suppliedBy[msg.sender]) / RAY;
+    uint amount = ((totalSupplied + totalRepaid) * (totalSupplied * RAY / suppliedBy[msg.sender]) / RAY) - totalRepaid;
     USDC.transfer(msg.sender, amount);
     suppliedBy[msg.sender] = 0;
 
