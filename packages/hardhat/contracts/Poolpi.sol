@@ -1,5 +1,5 @@
 pragma solidity 0.8.11;
-//SPDX-License-Identifier: MIT
+//SPDX-License-Identifier: UNLICENSED
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
@@ -30,7 +30,20 @@ contract Poolpi {
   uint totalRepaid;
   uint nbOfLoans;
   mapping(address => uint) suppliedBy;
-  mapping(uint => Loan) loan;
+  mapping(uint => Loan) public loan;
+
+  event Supplied(address indexed supplier, uint amount);
+  event Borrowed(address indexed borrower, uint loanId,  uint amount);
+  event Repaid(uint indexed loanId, uint amount);
+  event Bought(uint indexed loanId, uint price);
+  event Withdrew(address indexed supplier, uint amount);
+
+  error SuppliesAreClosed();
+  error CollectionNotWhitelisted(IERC721 collection);
+  error BorrowsAndRepaysAreClosed();
+  error AuctionNotYetStarted();
+  error LiquidityNotYetUnlocked();
+  error SenderIsNotTheBorrower(address sender);
 
   constructor(
     uint startDate,
@@ -56,19 +69,20 @@ contract Poolpi {
   /// @notice supply USDC to the pool before its start date
   /// @dev contract must have `amount` allowed for spending 
   function supply(uint amount) public {
-    require(block.timestamp < START_DATE);
+    if (block.timestamp >= START_DATE) revert SuppliesAreClosed();
 
     USDC.transferFrom(msg.sender, address(this), amount);
     suppliedBy[msg.sender] += amount;
     totalSupplied += amount;
+
+    emit Supplied(msg.sender, amount);
   }
 
   /// @notice borrow USDC by providing a NFT as collateral
   /// @dev contract must be allowed to spend the asset
   function borrow(IERC721 collection, uint tokenId) public {
-    // collection must be whitelisted
-    require(assetPrice[collection] > 0);
-    require(block.timestamp > START_DATE && block.timestamp < EXPIRATION_DATE);
+    if (assetPrice[collection] == 0) revert CollectionNotWhitelisted(collection);
+    if (block.timestamp < START_DATE || block.timestamp >= EXPIRATION_DATE) revert BorrowsAndRepaysAreClosed();
 
     IERC721(collection).transferFrom(msg.sender, address(this), tokenId);
     loan[nbOfLoans] = Loan({
@@ -77,24 +91,29 @@ contract Poolpi {
       loanDate: block.timestamp,
       borrowedBy: msg.sender
     });
+    uint amount = 2 * assetPrice[collection] - calculateInterests(assetPrice[collection], EXPIRATION_DATE - block.timestamp);
+    USDC.transfer(msg.sender, amount);
+
+    emit Borrowed(msg.sender, nbOfLoans, amount);
     nbOfLoans++;
-    USDC.transfer(msg.sender, 2 * assetPrice[collection] - calculateInterests(assetPrice[collection], EXPIRATION_DATE - block.timestamp));
   }
 
   /// @notice repay lended USDC + interests & get back the NFT collateral
   function repay(uint loanId) public {
-    require(loan[loanId].borrowedBy == msg.sender);
-    require(block.timestamp < EXPIRATION_DATE);
+    if (loan[loanId].borrowedBy != msg.sender) revert SenderIsNotTheBorrower(msg.sender);
+    if (block.timestamp >= EXPIRATION_DATE) revert BorrowsAndRepaysAreClosed();
 
     uint repaid = assetPrice[loan[loanId].collection] + calculateInterests(assetPrice[loan[loanId].collection], block.timestamp - loan[loanId].loanDate);
     USDC.transferFrom(msg.sender, address(this), repaid);
     IERC721(loan[loanId].collection).transferFrom(address(this), msg.sender, loan[loanId].tokenId);
     totalRepaid += repaid;
+
+    emit Repaid(loanId, repaid);
   }
 
   /// @notice buy a NFT of a loan that weren't repaid, price determined by a dutch auction
   function buy(uint loanId) public {
-    require(block.timestamp > EXPIRATION_DATE);
+    if (block.timestamp < EXPIRATION_DATE) revert AuctionNotYetStarted();
 
     uint elapsedTimeSinceAuctionStart = block.timestamp - EXPIRATION_DATE;
     uint auctionDuration = DEATH_DATE - EXPIRATION_DATE;
@@ -106,14 +125,19 @@ contract Poolpi {
     USDC.transferFrom(msg.sender, address(this), price);
     totalRepaid += price;
     IERC721(loan[loanId].collection).transferFrom(address(this), msg.sender, loan[loanId].tokenId);
+
+    emit Bought(loanId, price);
   }
 
   /// @notice get all USDC gained during the pool lifetime as a supplier
   function withdraw() public {
-    require(block.timestamp > DEATH_DATE);
+    if (block.timestamp < DEATH_DATE) revert LiquidityNotYetUnlocked();
 
-    USDC.transfer(msg.sender, totalRepaid * (totalSupplied * RAY / suppliedBy[msg.sender]) / RAY);
+    uint amount = totalRepaid * (totalSupplied * RAY / suppliedBy[msg.sender]) / RAY;
+    USDC.transfer(msg.sender, amount);
     suppliedBy[msg.sender] = 0;
+
+    emit Withdrew(msg.sender, amount);
   }
 
   function calculateInterests(uint amount, uint elapsedTime) private view returns(uint) {
