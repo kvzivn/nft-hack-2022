@@ -1,27 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 const BorrowModal = ({ setShowModal }) => {
   const [approved, setApproved] = useState(false);
   const [accepted, setAccepted] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(59);
 
   const handleApproval = () => {
     console.log("Call smart contract function here");
     setApproved(true);
   };
 
-  useEffect(() => {
-    setTimeout(() => {
-      setSecondsLeft(secondsLeft - 1);
-    }, 1000);
-  }, [secondsLeft]);
-
   return (
     <div className="modal-backdrop">
       <div className="modal">
         <div className="modal-container">
           <div className="modal-text">Deadline until repayment:</div>
-          <div className="modal-countdown">16 days, 9 hours, {secondsLeft} seconds</div>
+          <div className="modal-countdown">16 days, 9 hours, 12 minutes</div>
 
           <hr className="modal-hr" />
 
