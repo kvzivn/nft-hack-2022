@@ -137,7 +137,7 @@ contract Poolpi {
   function withdraw() public {
     if (block.timestamp < DEATH_DATE) revert LiquidityNotYetUnlocked();
 
-    uint amount = ((totalSupplied + totalRepaid - totalBorrowed) * ((totalSupplied * RAY / suppliedBy[msg.sender])) / RAY);
+    uint amount = suppliedBy[msg.sender] * (totalSupplied + totalRepaid - totalBorrowed) / totalSupplied;
     USDC.transfer(msg.sender, amount);
     suppliedBy[msg.sender] = 0;
 
