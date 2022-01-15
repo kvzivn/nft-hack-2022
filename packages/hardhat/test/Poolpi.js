@@ -100,6 +100,7 @@ describe("Poolpi", async function () {
   it("Should withdraw investment + 0.45 usdc", async function () {
     const amount = BigNumber.from(10).pow(6).mul(100)
     const price = BigNumber.from(10).pow(6).mul(10)
+    await usdc.transfer(usdc.address, amount.mul(9)) // supplier has 100 usdc
     await usdc.approve(plp.address, amount)
     await usdc.transfer(accAddress2, price.mul(2)) // supplier has 80 usdc
     await plp.supply(amount.div(2)) // supplier has 30 usdc
@@ -110,11 +111,55 @@ describe("Poolpi", async function () {
     await usdc.connect(acc2).approve(plp.address, price.div(100).mul(95))
     await hre.network.provider.send('evm_setNextBlockTimestamp', [startTimestamp + 50_000]);
     await plp.connect(acc2).repay(0)
-    const contractBalance = await usdc.balanceOf(plp.address)
-    console.log(contractBalance.toString());
     await hre.network.provider.send('evm_setNextBlockTimestamp', [startTimestamp + 200_000]);
     await plp.withdraw() // supplier has 80.45 usdc
+    const contractBalance = await usdc.balanceOf(plp.address)
+    expect(contractBalance).to.equal(BigNumber.from(0))
     const balanceAfter = await usdc.balanceOf(accAddress)
     expect(balanceAfter).to.equal(BigNumber.from(10).pow(4).mul(8045))
   });
+
+  it("Should buy nft for 150% of its price", async function () {
+    const amount = BigNumber.from(10).pow(6).mul(100)
+    const price = BigNumber.from(10).pow(6).mul(10)
+    await usdc.transfer(usdc.address, amount.mul(9)) // supplier has 100 usdc
+    await usdc.approve(plp.address, amount)
+    await usdc.transfer(accAddress2, price.mul(2)) // supplier has 80 usdc
+    await plp.supply(amount.div(2)) // supplier has 30 usdc
+    await nft.connect(acc2).mint()
+    await nft.connect(acc2).approve(plp.address, 1)
+    await hre.network.provider.send('evm_setNextBlockTimestamp', [startTimestamp]);
+    await plp.connect(acc2).borrow(nft.address, 1)
+    await usdc.connect(acc2).approve(plp.address, price.div(100).mul(95))
+    await hre.network.provider.send('evm_setNextBlockTimestamp', [startTimestamp + 150_000]); // middle of sell period
+    await plp.connect(acc2).buy(0)
+    await hre.network.provider.send('evm_setNextBlockTimestamp', [startTimestamp + 201_000]); // after death date
+    await plp.withdraw() // supplier has 80.45 usdc
+    const contractBalance = await usdc.balanceOf(plp.address)
+    expect(contractBalance).to.equal(BigNumber.from(0))
+    const balanceAfter = await usdc.balanceOf(accAddress)
+    expect(balanceAfter).to.equal(BigNumber.from(10).pow(6).mul(80).sub(price.div(10).mul(9)).add(price.mul(3).div(4)))
+  });
+
+  // it("Should share gains according to proportion supplied", async function () {
+  //   const amount = BigNumber.from(10).pow(6).mul(100)
+  //   const price = BigNumber.from(10).pow(6).mul(10)
+  //   await usdc.transfer(usdc.address, amount.mul(9)) // supplier has 100 usdc
+  //   await usdc.approve(plp.address, amount)
+  //   await usdc.transfer(accAddress2, price.mul(2)) // supplier has 80 usdc
+  //   await plp.supply(amount.div(2)) // supplier has 30 usdc
+  //   await nft.connect(acc2).mint()
+  //   await nft.connect(acc2).approve(plp.address, 1)
+  //   await hre.network.provider.send('evm_setNextBlockTimestamp', [startTimestamp]);
+  //   await plp.connect(acc2).borrow(nft.address, 1)
+  //   await usdc.connect(acc2).approve(plp.address, price.div(100).mul(95))
+  //   await hre.network.provider.send('evm_setNextBlockTimestamp', [startTimestamp + 150_000]); // middle of sell period
+  //   await plp.connect(acc2).buy(0)
+  //   await hre.network.provider.send('evm_setNextBlockTimestamp', [startTimestamp + 201_000]); // after death date
+  //   await plp.withdraw() // supplier has 80.45 usdc
+  //   const contractBalance = await usdc.balanceOf(plp.address)
+  //   expect(contractBalance).to.equal(BigNumber.from(0))
+  //   const balanceAfter = await usdc.balanceOf(accAddress)
+  //   expect(balanceAfter).to.equal(BigNumber.from(10).pow(6).mul(80).sub(price.div(10).mul(9)).add(price.mul(3).div(4)))
+  // });
 });
