@@ -14,7 +14,7 @@ const PoolFi = () => {
   const [tab, setTab] = useState(null);
 
   const TABS = {
-    whitelisted: <Whitelisted setApproved={setApproved} />,
+    whitelisted: <Whitelisted approved={approved} setApproved={setApproved} />,
     other: <OtherNFTs />,
     loans: <Loans approved={approved} />,
     liquidity: <ComingSoon />,
