@@ -33,6 +33,8 @@ contract Poolpi {
     address borrowedBy;
   }
 
+  address owner;
+  bool stopBorrows;
   uint totalSupplied;
   uint totalBorrowed;
   uint totalRepaid;
@@ -64,6 +66,7 @@ contract Poolpi {
   ) {
     require(block.timestamp < startDate && startDate < expirationDate && expirationDate < deathDate);
 
+    owner = msg.sender;
     START_DATE = startDate;
     EXPIRATION_DATE = expirationDate;
     DEATH_DATE = deathDate;
@@ -91,6 +94,7 @@ contract Poolpi {
   function borrow(IERC721 collection, uint tokenId) public {
     if (assetPrice[collection] == 0) revert CollectionNotWhitelisted(collection);
     if (block.timestamp < START_DATE || block.timestamp >= EXPIRATION_DATE) revert BorrowsAndRepaysAreClosed();
+    require(!stopBorrows);
 
     IERC721(collection).transferFrom(msg.sender, address(this), tokenId);
     uint amount = assetPrice[collection] - calculateInterests(assetPrice[collection], EXPIRATION_DATE - block.timestamp);
@@ -152,5 +156,17 @@ contract Poolpi {
 
   function calculateInterests(uint amount, uint elapsedTime) private view returns(uint) {
     return elapsedTime * BORROW_SPR * amount / RAY;
+  }
+
+  // admin
+
+  /// @notice accessible only by owner, prevents further loans to be created after being called
+  /// @notice called by bot when sudden price drop is detected on OpenSea API of listed collections
+  /// @notice resumes the contract to normal operations when called again
+  /// @notice supplies, repays, sells & withdraws stay unaffected
+  function stopOrRestartBorrows() public {
+    require(msg.sender == owner);
+
+    stopBorrows = !stopBorrows;
   }
 }
