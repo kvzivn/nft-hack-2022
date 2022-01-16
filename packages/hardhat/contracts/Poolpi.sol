@@ -1,8 +1,14 @@
 pragma solidity 0.8.11;
 //SPDX-License-Identifier: UNLICENSED
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+interface IERC20 {
+  function transfer(address recipient, uint256 amount) external returns (bool);
+  function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
+}
+
+interface IERC721 {
+  function transferFrom(address from, address to, uint256 tokenId) external;
+}
 
 /// @title a NFT as collateral lending protocol
 /// @author tobou.eth
