@@ -80,7 +80,7 @@ export default function Address(props) {
       </span>
       <span style={{ verticalAlign: "middle", paddingLeft: 5, fontSize: props.fontSize ? props.fontSize : 28 }}>
         {props.onChange ? (
-          <Text editable={{ onChange: props.onChange }}>
+          <Text editable={{ onChange: props.onChange }} copyable={{ text: address }}>
             <a
               style={{ color: currentTheme === "light" ? "#222222" : "#ddd" }}
               target="_blank"
@@ -91,7 +91,7 @@ export default function Address(props) {
             </a>
           </Text>
         ) : (
-          <Text>
+          <Text copyable={{ text: address }}>
             <a
               style={{ color: currentTheme === "light" ? "#222222" : "#ddd" }}
               target="_blank"

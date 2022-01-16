@@ -1,5 +1,3 @@
-import { Button, Col, Menu, Row } from "antd";
-import "antd/dist/antd.css";
 import {
   useBalance,
   useContractLoader,
@@ -24,13 +22,15 @@ import {
   FaucetHint,
   NetworkSwitch,
   Whitelisted,
+  OtherNFTs,
+  Loans,
 } from "./components";
+import { PoolFi } from "./views";
 import { NETWORKS, ALCHEMY_KEY } from "./constants";
 import externalContracts from "./contracts/external_contracts";
 // contracts
 import deployedContracts from "./contracts/hardhat_contracts.json";
 import { Transactor, Web3ModalSetup } from "./helpers";
-import { Home, ExampleUI, Hints, Subgraph } from "./views";
 import { useStaticJsonRPC } from "./hooks";
 
 const { ethers } = require("ethers");
@@ -246,43 +246,8 @@ function App(props) {
   const faucetAvailable = localProvider && localProvider.connection && targetNetwork.name.indexOf("local") !== -1;
 
   return (
-    <div className="App">
-      {/* ✏️ Edit the header and change the title to your project name */}
-      <Header />
-
-      {ethers.utils.formatEther(yourMainnetBalance) > 0 && (
-        <>
-          <Menu style={{ textAlign: "center", border: "none" }} selectedKeys={[location.pathname]} mode="horizontal">
-            <Menu.Item key="/">
-              <Link to="/">Whitelisted</Link>
-            </Menu.Item>
-            <Menu.Item key="/nfts">
-              <Link to="/nfts">Other NFTs</Link>
-            </Menu.Item>
-            <Menu.Item key="/loans">
-              <Link to="/loans">Active Loans</Link>
-            </Menu.Item>
-            <Menu.Item key="/liquidity">
-              <Link to="/liquidity">Provide Liquidity</Link>
-            </Menu.Item>
-          </Menu>
-        </>
-      )}
-
-      <Switch>
-        <Route exact path="/">
-          {ethers.utils.formatEther(yourMainnetBalance) > 0 ? <Whitelisted /> : <h1>Please connect your wallet</h1>}
-        </Route>
-        <Route exact path="/nfts">
-          <h1>NFTs</h1>
-        </Route>
-        <Route path="/loans">
-          <h1>Loans</h1>
-        </Route>
-        <Route path="/liquidity">
-          <h1>Liquidity</h1>
-        </Route>
-      </Switch>
+    <div className="App pattern-checks-sm">
+      <PoolFi />
 
       {/* 👨‍💼 Your account is in the top right with a wallet at connect options */}
       <div style={{ position: "fixed", textAlign: "right", right: 0, top: 0, padding: 10 }}>
@@ -296,7 +261,7 @@ function App(props) {
               />
             </div>
           )}
-          <Account
+          {/* <Account
             useBurner={USE_BURNER_WALLET}
             address={address}
             localProvider={localProvider}
@@ -307,7 +272,7 @@ function App(props) {
             loadWeb3Modal={loadWeb3Modal}
             logoutOfWeb3Modal={logoutOfWeb3Modal}
             blockExplorer={blockExplorer}
-          />
+          /> */}
         </div>
         {/* {yourLocalBalance.lte(ethers.BigNumber.from("0")) && (
           <FaucetHint localProvider={localProvider} targetNetwork={targetNetwork} address={address} />

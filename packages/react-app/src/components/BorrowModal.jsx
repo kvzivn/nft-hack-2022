@@ -1,20 +1,59 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-const BorrowModal = ({ setShowModal }) => {
-  const [approved, setApproved] = useState(false);
+const BorrowModal = ({ setShowModal, setApproved }) => {
+  const [loading, setLoading] = useState(false);
+  const [finished, setFinished] = useState(false);
+  const [signed, setSigned] = useState(false);
   const [accepted, setAccepted] = useState(false);
+  const [fadeIn, setFadeIn] = useState(false);
 
   const handleApproval = () => {
-    console.log("Call smart contract function here");
-    setApproved(true);
+    if (signed) {
+      setLoading(true);
+
+      setTimeout(() => {
+        setApproved(true);
+        setFinished(true);
+        setLoading(false);
+      }, 4000);
+    } else {
+      console.log("Call smart contract function here");
+      setLoading(true);
+
+      setTimeout(() => {
+        setLoading(false);
+        setSigned(true);
+      }, 3000);
+    }
+  };
+
+  useEffect(() => {
+    setTimeout(() => {
+      setFadeIn(true);
+    }, 200);
+  }, []);
+
+  const getButtonText = () => {
+    if (finished) return "View Transaction";
+
+    return signed ? (loading ? "Transaction pending..." : "Borrow 642 USDC") : loading ? "Signing..." : "Approve";
   };
 
   return (
-    <div className="modal-backdrop">
+    <div className={`modal-backdrop ${fadeIn ? "fade-in" : ""}`}>
       <div className="modal">
         <div className="modal-container">
-          <div className="modal-text">Deadline until repayment:</div>
-          <div className="modal-countdown">16 days, 9 hours, 12 minutes</div>
+          {finished ? (
+            <>
+              <div className="modal-text">Lil Pudgy #4267</div>
+              <div className="modal-countdown">Success!</div>
+            </>
+          ) : (
+            <>
+              <div className="modal-text">Deadline until repayment:</div>
+              <div className="modal-countdown">16 days, 9 hours, 12 minutes</div>
+            </>
+          )}
 
           <hr className="modal-hr" />
 
@@ -42,15 +81,15 @@ const BorrowModal = ({ setShowModal }) => {
             </svg>
           </button>
 
-          <div className="modal-tos">
+          <div className={`modal-tos ${loading || finished ? "disabled" : ""}`}>
             <input type="checkbox" id="accept" onChange={e => setAccepted(e.target.checked)} />
             <label for="accept" className="modal-text">
               I have read and agreed on the <u>terms of service</u>
             </label>
           </div>
 
-          <button onClick={() => handleApproval()} className="btn" disabled={!accepted}>
-            {approved ? "Borrow 642 USDC" : "Approve"}
+          <button onClick={() => handleApproval()} className="btn btn--approve" disabled={!accepted || loading}>
+            {getButtonText()}
           </button>
         </div>
       </div>

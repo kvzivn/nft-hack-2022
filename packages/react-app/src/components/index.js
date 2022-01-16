@@ -22,3 +22,5 @@ export { default as NetworkDisplay } from "./NetworkDisplay";
 export { default as FaucetHint } from "./FaucetHint";
 export { default as NetworkSwitch } from "./NetworkSwitch";
 export { default as Whitelisted } from "./Whitelisted";
+export { default as OtherNFTs } from "./OtherNFTs";
+export { default as Loans } from "./Loans";

@@ -1,35 +1,138 @@
+@import url(https://fonts.googleapis.com/css?family=Mr+Dafoe);
+@import url(https://fonts.googleapis.com/css?family=Titillium+Web:900);
+
+@font-face {
+  font-family: "PressStart";
+  src: url("./fonts/PressStart.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Minecraft";
+  src: url("./fonts/Minecraft.ttf") format("truetype");
+}
+
 html,
-body {
-  height: auto !important;
+body,
+#root {
+  height: 100%;
+}
+
+html {
+  font-size: 15px;
 }
 
 body {
   color: #111;
-  letter-spacing: 0.02em;
+  letter-spacing: -0.075em;
+  font-family: monospace !important;
+  background: #ffe2f4 !important;
+}
+
+header {
+  position: relative;
+}
+
+.wallet {
+  position: absolute;
+  top: 2rem;
+  right: 4rem;
+  font-size: 28px;
+  text-align: right;
+}
+
+.wallet-balance {
+  margin-top: -0.5rem;
+}
+
+.wallet-balance span {
+  font-weight: 600;
 }
 
 .App {
-  margin-top: 4rem;
-  font-family: Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
   text-align: center;
+  height: 100%;
+  color: #ffdaf1bb;
 }
 
-.nft {
-  border: 2px solid #eaeaea;
-  border-radius: 20px;
-  padding: 0.5rem 0.5rem 1.5rem;
+.wrapper {
+  height: 100%;
+  color: #111;
+}
+.container {
+  opacity: 0;
+  transition: opacity 0.35s ease-in-out 0.5s;
+}
+
+.container.container--connected {
+  opacity: 1;
+}
+
+.logo {
+  width: 250px;
+  margin: 0 auto;
+}
+
+.nav {
+  display: flex;
+  width: 680px;
+  justify-content: space-between;
+  margin: 1.25rem auto 3.35rem;
+
+  /* font-family: "Minecraft", sans-serif; */
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.nav.nav--connected {
+  opacity: 1;
+}
+
+.navBtn {
+  border: none;
+  background: none;
+  font-size: 18px;
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: border 0.2s ease-in-out 0.2s;
+  letter-spacing: 0.03em;
+}
+
+.navBtn.active {
+  border-color: #312830;
+  box-sizing: content-box;
+}
+
+.navBtn.approved:before {
+  content: "1";
+  position: absolute;
+  transform: translate(190%, -60%);
+  border-radius: 50%;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem 0.15rem 0.6rem;
+  color: white;
+  background: #340a20;
+  opacity: 0.8;
 }
 
 .btn {
+  position: relative;
   padding: 0.75rem 1.5rem;
-  background: #111;
+  background: #340a20;
   border-radius: 20px;
   font-size: 15px;
   font-weight: 500;
   color: white;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.09em;
   border: none;
   cursor: pointer;
+  font-family: "Roboto", sans-serif;
+}
+
+.btn--approve {
+  font-size: 17px;
+  padding: 1.15rem 1.85rem;
 }
 
 .btn:disabled {
@@ -54,17 +157,32 @@ body {
   right: 0;
   left: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: #44293a80;
+  margin-left: 0 !important;
+  opacity: 0;
+  transition: opacity 0.15s ease-in-out, transform 0.15s ease-in-out;
+  z-index: 9;
+}
+
+.modal-backdrop.fade-in {
+  opacity: 1;
 }
 
 .modal {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
-  width: 650px;
+  width: 612px;
   background: white;
-  border-radius: 4px;
+  transform: translate(-50%, -45%);
+  opacity: 0;
+  transition: opacity 0.25s ease-in-out, transform 0.35s ease-in-out;
+  border-radius: 12px;
+}
+
+.modal-backdrop.fade-in .modal {
+  transform: translate(-50%, -52%);
+  opacity: 1;
 }
 
 .modal-container {
@@ -87,7 +205,7 @@ body {
 }
 
 .modal-hr {
-  margin-top: 3rem;
+  margin-top: 2.75rem;
   margin-bottom: 3rem;
   max-width: 500px;
   opacity: 0.4;
@@ -118,12 +236,18 @@ body {
   align-items: center;
   justify-content: center;
   margin: 3.5rem auto;
+  cursor: pointer;
+}
+
+.modal-tos.disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .modal-tos input {
   transform: scale(2);
   margin-right: 1.25rem;
-  cursor: pointer;
+  cursor: inherit;
 }
 
 .modal-tos input:focus {
@@ -133,4 +257,232 @@ body {
 .modal-tos label {
   cursor: pointer;
   user-select: none;
+  font-size: 16px;
+  padding-top: 3px;
+}
+
+.nfts {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+  transition: opacity 0.1s ease-in-out;
+  opacity: 0;
+}
+
+.nfts > * + * {
+  margin-left: 2rem;
+}
+
+.nft {
+  border-radius: 20px;
+  padding: 0.75rem 0.75rem 1.5rem;
+  background: white;
+  border: 1px solid #eaeaea;
+  box-shadow: 0 13px 27px -5px rgb(50 50 93 / 25%), 0 8px 16px -8px rgb(0 0 0 / 30%);
+}
+
+.nft img {
+  width: 240px;
+}
+
+.loans {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2rem;
+  opacity: 0;
+  transition: opacity 0.1s ease-in-out;
+}
+
+.loans > * + * {
+  margin-top: 2rem;
+}
+
+.loan {
+  display: flex;
+  width: 800px;
+  border: 1px solid #eaeaea;
+  border-radius: 20px;
+  padding: 0.75rem;
+  text-align: left;
+  background: white;
+  box-shadow: 0 13px 27px -5px rgb(50 50 93 / 25%), 0 8px 16px -8px rgb(0 0 0 / 30%);
+}
+
+.loan-img {
+  width: 180px;
+  height: 180px;
+}
+
+.loan-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex: 1;
+  padding: 0.5rem 1.25rem 0rem 2rem;
+}
+
+.loan-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.loan-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.loan-text {
+  font-size: 18px;
+}
+
+.loan-text--bold {
+  font-weight: 600;
+}
+
+.loan-collection {
+  font-size: 16px;
+  color: #4b4b4b;
+}
+
+.loan-name {
+  font-size: 20px;
+}
+
+.loan-hr {
+  width: 100%;
+  margin: 1.25rem 0 1rem;
+  opacity: 0.25;
+}
+
+.connect {
+  margin-top: 4rem;
+}
+
+.connect-btn {
+  font-size: 18px;
+  padding: 1.15rem 2.65rem;
+  border-radius: 40px;
+}
+
+.hero {
+  margin-top: -6rem;
+}
+
+.hero-h1 {
+  font-size: 72px;
+}
+
+.hero-text {
+  position: relative;
+  width: 600px;
+  margin: 3.5rem auto;
+  padding-right: 1rem;
+}
+
+.hero-pool span {
+  letter-spacing: -0.15em;
+}
+
+.hero-heading {
+  font-size: 42px;
+}
+
+.hero-subHeading {
+  font-size: 24px;
+}
+
+.hero-pool {
+  position: relative;
+  background-image: linear-gradient(
+    180deg,
+    rgb(50.196% 99.608% 91.765%) 0%,
+    rgb(53.088% 96.078% 92.279%) 6.25%,
+    rgb(55.98% 92.549% 92.794%) 12.5%,
+    rgb(58.873% 89.02% 93.309%) 18.75%,
+    rgb(61.765% 85.49% 93.824%) 25%,
+    rgb(64.657% 81.961% 94.338%) 31.25%,
+    rgb(67.549% 78.431% 94.853%) 37.5%,
+    rgb(70.441% 74.902% 95.368%) 43.75%,
+    rgb(73.333% 71.373% 95.882%) 50%,
+    rgb(76.225% 67.843% 96.397%) 56.25%,
+    rgb(79.118% 64.314% 96.912%) 62.5%,
+    rgb(82.01% 60.784% 97.426%) 68.75%,
+    rgb(84.902% 57.255% 97.941%) 75%,
+    rgb(87.794% 53.725% 98.456%) 81.25%,
+    rgb(90.686% 50.196% 98.971%) 87.5%,
+    rgb(93.578% 46.667% 99.485%) 93.75%,
+    rgb(96.471% 43.137% 100%) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 3px #11030d;
+  font-size: 92px;
+  font-family: "PressStart", sans-serif;
+  font-style: italic;
+  margin: 0;
+  line-height: 1;
+}
+
+.hero-pool:before {
+  content: "POOLFI";
+  position: absolute;
+  left: 32px;
+  top: 0;
+  z-index: 10;
+  background-image: -webkit-linear-gradient(
+    -40deg,
+    transparent 0%,
+    transparent 40%,
+    #fff 50%,
+    transparent 60%,
+    transparent 100%
+  );
+  background-position: -480px 0;
+  -webkit-background-clip: text;
+  -webkit-text-stroke: 0;
+  padding-right: 300px;
+  -webkit-animation-name: chrome_effect;
+  -webkit-animation-duration: 6s;
+  -webkit-animation-delay: 2s;
+  -webkit-animation-timing-function: linear;
+  -webkit-animation-iteration-count: infinite;
+  opacity: 0.5;
+}
+
+.hero-finance {
+  position: absolute;
+  bottom: -4rem;
+  right: 5rem;
+  margin: 0px;
+  font-family: "Mr Dafoe", cursive;
+  font-size: 100px;
+  color: #f975f7;
+  transform: rotate(-15deg);
+  -ms-transform: rotate(-15deg); /* IE 9 */
+  -webkit-transform: rotate(-15deg); /* Safari and Chrome */
+  -webkit-text-stroke: 1px #f008b7;
+  -webkit-filter: drop-shadow(2px 2px 20px #f008b7);
+  z-index: 20;
+}
+
+@keyframes chrome_effect {
+  0% {
+    background-position: -480px 0;
+  }
+  10% {
+    background-position: 220px 0;
+  }
+  100% {
+    background-position: 220px 0;
+  }
+}
+
+.coming-soon {
+  margin-top: 8rem;
+  opacity: 0;
+  transition: opacity 0.1s ease-in-out;
 }
