@@ -5,48 +5,48 @@ import OtherNFTs from "../components/OtherNFTs";
 import Loans from "../components/Loans";
 import ComingSoon from "../components/ComingSoon";
 import Navigation from "../components/Navigation";
-
-import "../helpers/pattern.min.css";
+import { useEthers, useLookupAddress } from '@usedapp/core'
 
 const PoolFi = () => {
-  const [connected, setConnected] = useState(false);
-  const [approved, setApproved] = useState(false);
-  const [tab, setTab] = useState(null);
+	const { activateBrowserWallet, account } = useEthers()
+  const [tab, setTab] = useState("whitelisted");
+  const [borrowed, setBorrowed] = useState(false)
+  const ens = useLookupAddress()
 
   const TABS = {
-    whitelisted: <Whitelisted approved={approved} setApproved={setApproved} />,
+    whitelisted: <Whitelisted borrowed={borrowed} setBorrowed={setBorrowed} />,
     other: <OtherNFTs />,
-    loans: <Loans approved={approved} />,
+    loans: <Loans borrowed={borrowed}/>,
     liquidity: <ComingSoon />,
   };
 
-  const handleConnect = () => {
-    setTimeout(() => {
-      setConnected(true);
-    }, 500);
-
-    setTimeout(() => {
-      setTab("whitelisted");
-    }, 750);
-  };
+  console.log(account);
 
   return (
     <div className="wrapper">
       <header>
         <img src={Logo} className="logo" alt="logo" />
+        <br/>
+        <br/>
+        <br/>
+        <br/>
+        <br/>
+        <br/>
 
-        {connected && (
+        {account && (<>
           <div className="wallet">
-            <div className="wallet-address">keni.eth</div>
+            <div className="wallet-address">{ens ?? account.substring(0, 6) + '...' + account.substring(account.length - 4, account.length)}</div>
             <div className="wallet-balance">
-              <span>{approved ? "642.02" : "0.02"}</span> USDC
+              {/* todo : fetch usdc balance */}
+              <span>{borrowed ? '642.02' : '0.02'}</span> USDC
             </div>
           </div>
+          <Navigation tab={tab} setTab={setTab} connected={account != null}/>
+          </>
         )}
       </header>
-      <Navigation tab={tab} setTab={setTab} connected={connected} approved={approved} />
-      <main className={`container ${connected ? "container--connected" : ""}`}>{TABS[tab]}</main>
-      {!connected && (
+      {account && <main className={`container ${account ? "container--connected" : ""}`}>{TABS[tab]}</main>}
+      {!account && (
         <div className="hero">
           <h2 className="hero-heading">WELCOME TO</h2>
 
@@ -58,8 +58,8 @@ const PoolFi = () => {
 
           <h4 className="hero-subHeading">Instant loans on (almost) any NFT collection</h4>
           <div className="connect">
-            <button className="btn connect-btn" onClick={() => handleConnect()}>
-              {connected ? "keni.eth" : "Connect Wallet"}
+            <button className="btn connect-btn" onClick={() => activateBrowserWallet()}>
+              {account ? "keni.eth" : "Connect Wallet"}
             </button>
           </div>
         </div>

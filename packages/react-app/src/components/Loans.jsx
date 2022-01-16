@@ -9,7 +9,7 @@ const previousLoan = {
   name: "Cool Dog #2192",
   time: "0 days, 2 hours, 18 min",
   seconds: 59,
-  price: "0.5421 USDC",
+  price: "100.5421 USDC",
   color: "#E22121",
 };
 
@@ -19,11 +19,11 @@ const approvedLoan = {
   name: "Lil Pudgy #4267",
   time: "16 days, 9 hours, 50 min",
   seconds: 56,
-  price: "0.0012 USDC",
+  price: "642.0012 USDC",
   color: "#00CA2C",
 };
 
-const Loans = ({ approved }) => {
+const Loans = ({ borrowed }) => {
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -35,7 +35,7 @@ const Loans = ({ approved }) => {
   return (
     <div className="loans" ref={containerRef}>
       <Loan loan={previousLoan} />
-      {approved && <Loan loan={approvedLoan} />}
+      {borrowed && <Loan loan={approvedLoan} />}
     </div>
   );
 };
